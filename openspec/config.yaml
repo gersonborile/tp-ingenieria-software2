@@ -2,12 +2,54 @@ schema: spec-driven
 
 # Project context (optional)
 # This is shown to AI when creating artifacts.
-# Add your tech stack, conventions, style guides, domain knowledge, etc.
-# Example:
-#   context: |
-#     Tech stack: TypeScript, React, Node.js
-#     We use conventional commits
-#     Domain: e-commerce platform
+context: |
+  Proyecto: Sistema de reserva de canchas para un club deportivo (TP de Ingeniería de Software II).
+
+  Dominio:
+  Plataforma que permite reservar canchas de distintos deportes (tenis, fútbol, pádel),
+  consultar disponibilidad por disciplina/fecha/horario, alquilar equipamiento asociado
+  a la reserva, y registrar el pago correspondiente.
+
+  Actores:
+  - Usuario/Socio: se registra, inicia sesión, consulta disponibilidad, crea reservas,
+    las consulta y cancela, y alquila equipamiento.
+  - Administrador: gestiona canchas, disciplinas, turnos y equipamiento; puede confirmar,
+    dar de baja o modificar cualquier reserva.
+
+  Entidades principales:
+  - Usuario (id, nombre, tipo, contacto, membresía)
+  - Cancha (id, nombre, disciplina(s), ubicación, capacidad, estado)
+  - Disciplina (id, nombre, duración típica de turno, reglas propias)
+  - Turno/Franja horaria (id, cancha_id, disciplina_id, fecha, hora_inicio, hora_fin)
+  - Reserva (id, usuario_id, turno_id, fecha_creación, estado)
+  - Equipamiento (id, nombre, disciplina, stock_total, stock_disponible)
+  - Alquiler_equipamiento (id, reserva_id opcional, equipamiento_id, cantidad, fecha, estado_devolución)
+  - Pago (id, reserva_id/alquiler_id, monto, método, estado)
+
+  Reglas de negocio clave:
+  - Un turno solo puede tener una reserva activa a la vez; no se permite doble reserva
+    sobre la misma cancha, fecha y franja horaria.
+  - Un usuario no puede reservar un turno cuya fecha/hora ya haya pasado.
+  - La duración mínima de una reserva es de 1 franja horaria; no se permiten reservas parciales.
+  - Un usuario solo puede cancelar sus propias reservas; el administrador puede cancelar cualquiera.
+  - Cancelar una reserva libera automáticamente la franja horaria y el equipamiento alquilado.
+  - No se puede reservar una cancha en estado "ocupada" o "en mantenimiento".
+  - Un usuario no puede tener más de una reserva activa simultánea en la misma franja horaria,
+    incluso en canchas distintas (regla configurable según decisión del club).
+
+  Tech stack:
+  - Frontend: Next.js (React + TypeScript)
+  - Backend: NestJS (Node.js + TypeScript)
+  - Base de datos: PostgreSQL
+  - ORM: Prisma
+  - Testing backend: Jest + Supertest
+
+  Estructura del repo: monorepo, con /backend, /frontend y /openspec en la raíz.
+
+  Convenciones:
+  - Una rama feature/ por spec o funcionalidad, integrada a main vía Pull Request
+    con al menos 1 aprobación.
+  - Mensajes de commit siguiendo Conventional Commits (feat:, fix:, spec:, chore:, etc.)
 
 # Per-artifact rules (optional)
 # Add custom rules for specific artifacts.

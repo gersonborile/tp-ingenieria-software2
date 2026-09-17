@@ -6,7 +6,7 @@ Módulo nuevo `equipment` en el backend NestJS existente (ver proposal.md - Why)
 
 **Goals:**
 - CRUD completo de items de equipamiento cumpliendo los invariantes de stock `0 <= availableStock <= totalStock`.
-- Permisos por rol: lectura autenticada, escritura solo `admin`, ajuste de stock `admin`/`recepcionista`.
+- Permisos por rol: lectura autenticada (cualquier rol), escritura y eliminación solo `admin`.
 - Exponer `availableStock` en el contrato para que el change de reservas lo consuma sin cambios de schema.
 
 **Non-Goals:**
@@ -20,18 +20,17 @@ Módulo nuevo `equipment` en el backend NestJS existente (ver proposal.md - Why)
 
 - **Estructura del módulo**: `EquipmentModule` con `EquipmentController`, `EquipmentService` y `EquipmentRepository` delgado sobre Prisma, siguiendo el patrón establecido (repositorio delgado, lógica en services). Preferido sobre lógica en controller o repository grueso por consistencia con el resto del código.
 
-- **Validación de invariantes en el service**: `EquipmentService` es el único punto que escribe stock (`create` con `availableStock = totalStock`, `updateStock` con validación previa). Alternativa considerada: triggers de PostgreSQL — descartada por mantener el invariante en una sola capa de negocio testeable.
+- **Validación de invariantes en el service**: `EquipmentService` es el único punto que escribe stock (`create` con `availableStock = totalStock`, `update` de reemplazo completo con validación previa de `0 <= availableStock <= totalStock`). Alternativa considerada: triggers de PostgreSQL — descartada por mantener el invariante en una sola capa de negocio testeable.
 
 - **Unicidad de `name`**: constraint único en Prisma + catch del error `P2002` mapeado a `409 Conflict`. Alternativa: query previa de existencia — descartada por race conditions.
 
-- **Roles**: `JwtAuthGuard` global + `RolesGuard` con decorador `@Roles()`. Lectura sin `@Roles()` (cualquier rol autenticado), escritura `@Roles(Role.ADMIN)`, stock `@Roles(Role.ADMIN, Role.RECEPCIONISTA)`.
+- **Roles**: `JwtAuthGuard` global + `RolesGuard` con decorador `@Roles()`. Lectura sin `@Roles()` (cualquier rol autenticado); `POST`, `PUT` y `DELETE` con `@Roles(Role.ADMIN)`.
 
 - **Perfiles de endpoints**:
-  - `GET /api/v1/equipamiento` → array plano (sin envelope) con filtros opcionales `q` (por `name`) y `categoria`.
-  - `GET /api/v1/equipamiento/:id` → item o `404`.
-  - `POST /api/v1/equipamiento` → `201` con item creado (DTO: `name`, `description`, `category`, `totalStock`).
-  - `PATCH /api/v1/equipamiento/:id` → `200` actualizando solo `name|description|category` (DTO parcial). No toca stock.
-  - `PATCH /api/v1/equipamiento/:id/stock` → `200` con ambos campos (`totalStock`, `availableStock`), validando el invariante en el DTO y de nuevo en el service (defensa en profundidad).
+  - `GET /api/v1/equipamiento` → `200` con un array plano (sin envelope) con todos los items del catálogo y su stock.
+  - `POST /api/v1/equipamiento` → `201` con item creado (DTO: `name`, `description`, `category`, `totalStock`; `availableStock = totalStock`).
+  - `PUT /api/v1/equipamiento/:id` → `200` con reemplazo completo del item (DTO: `name`, `description`, `category`, `totalStock`, `availableStock`), validando el invariante en el DTO y de nuevo en el service (defensa en profundidad). `404` si no existe.
+  - `DELETE /api/v1/equipamiento/:id` → `204 No Content` (hard delete) o `404` si no existe.
 
 - **Integración futura con reservas**: el cambio conserva `availableStock` como fuente de verdad escalar; el change de reservas deberá descontar/liberar dentro de transacciones Prisma. Se deja documentado para que ese change lo diseñe con lock/transacción.
 

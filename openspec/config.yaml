@@ -1,32 +1,66 @@
+# openspec/config.yaml
 schema: spec-driven
 
-# Project context (optional)
-# This is shown to AI when creating artifacts.
-# Add your tech stack, conventions, style guides, domain knowledge, etc.
-# Example:
-#   context: |
-#     Tech stack: TypeScript, React, Node.js
-#     We use conventional commits
-#     Domain: e-commerce platform
+context: |
+  Domain: Sistema de gestión de reservas de canchas deportivas para un club deportivo.
+  Entidades principales: Club, Court (cancha), Reservation (reserva), Member (socio),
+  User (con roles: admin, recepcionista, socio).
+  Reglas de negocio clave: evitar solapamiento de horarios en una misma cancha,
+  franjas horarias fijas de 1 hora por cancha (ej: 09:00-10:00, 10:00-11:00),
+  política de cancelación con ventana de tiempo mínima. Sin manejo de pagos
+  por ahora (no incluir endpoints ni entidades de facturación/pago en esta fase).
 
-# Per-artifact rules (optional)
-# Add custom rules for specific artifacts.
-# Example:
-#   rules:
-#     proposal:
-#       - Keep proposals under 500 words
-#       - Always include a "Non-goals" section
-#     tasks:
-#       - Break tasks into chunks of max 2 hours
+  Frontend: Next.js (React + TypeScript), App Router.
+  Backend: NestJS (Node.js + TypeScript).
+  Database: PostgreSQL.
+  ORM: Prisma.
 
-# Per-operation guidance (optional)
-# Add advisory guidance for how apply and archive work should be conducted.
-# This is separate from artifact rules above.
-# Example:
-#   operations:
-#     apply:
-#       guidance:
-#         - Keep test summaries concise
-#     archive:
-#       guidance:
-#         - Summarize the archive outcome before finishing
+  Arquitectura: Modular estándar de NestJS (un module por feature: courts, reservations,
+  members, users, auth) con repository delgado sobre Prisma. Lógica de negocio en
+  services, no en controllers. No usar patrón hexagonal/clean architecture completo
+  a menos que se indique explícitamente lo contrario en un futuro change.
+
+  API style: REST plano, versionado en /api/v1/. Sin envelope forzado en las
+  respuestas (no usar { data, meta, error } salvo que el endpoint lo requiera
+  explícitamente, ej. paginación).
+
+  Validación: DTOs con class-validator + class-transformer en cada endpoint de
+  entrada. No validar manualmente dentro de los services.
+
+  Auth: JWT con Passport, guards de NestJS (@UseGuards) para roles
+  (admin, recepcionista, socio). Endpoints de reservas deben validar que el
+  usuario autenticado tenga permiso sobre el recurso (ej: un socio solo ve/cancela
+  sus propias reservas).
+
+  Naming: camelCase en JSON/TypeScript. Prisma mapea a snake_case en la DB
+  vía @map/@@map. IDs como UUID, no autoincrementales.
+
+  Testing: Jest para unit tests de services, tests e2e con supertest para
+  controllers/endpoints críticos (especialmente reservas y disponibilidad).
+
+rules:
+  proposal:
+    - Include rollback plan
+    - Identify affected teams (frontend/backend) si el contrato de API cambia
+    - Especificar si el endpoint requiere autenticación y qué rol(es)
+
+  specs:
+    - Use Given/When/Then format para reglas de disponibilidad y solapamiento
+    - Reference existing patterns before inventing new ones
+    - Las franjas horarias son slots fijos de 1 hora; un endpoint de reservas
+      debe validar que el slot solicitado exista y esté libre, devolviendo
+      409 Conflict si ya está reservado
+
+  tasks:
+    - Break tasks into chunks of max 2 hours
+    - Separar tareas de contrato de API (DTOs, OpenAPI) de tareas de implementación
+
+operations:
+  apply:
+    guidance:
+      - Run focused tests before the full suite
+      - Verificar que los DTOs generados coincidan con el schema de Prisma
+  archive:
+    guidance:
+      - Keep the completion summary concise
+      - Indicar si el contrato de API tuvo cambios respecto a lo propuesto

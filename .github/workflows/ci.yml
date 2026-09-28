@@ -6,6 +6,10 @@ on:
   push:
     branches: [main]
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
   validate-specs:
     name: Validar OpenSpec
@@ -24,3 +28,152 @@ jobs:
 
       - name: Validar specs
         run: openspec validate --all --strict
+
+  backend-tests:
+    name: backend-tests
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: club_test
+          POSTGRES_PASSWORD: club_test
+          POSTGRES_DB: club_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      DATABASE_URL: postgresql://club_test:club_test@localhost:5432/club_test
+      NODE_ENV: test
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Detectar backend
+        id: check-backend
+        run: |
+          if [ -f backend/package.json ]; then
+            echo "Backend detectado: se ejecutan los tests."
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::notice::La carpeta backend todavía no existe (se creará con 'nest new'); se omite backend-tests."
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Resolver versión de Node
+        id: node-version
+        run: |
+          version=""
+          if [ -f backend/.nvmrc ]; then
+            version="$(tr -d '[:space:]' < backend/.nvmrc | head -n 1)"
+            echo "Versión de Node tomada de backend/.nvmrc: $version"
+          elif [ -f backend/package.json ] && grep -q '"engines"' backend/package.json; then
+            version="$(node -e "try{const p=require('./backend/package.json');process.stdout.write(String((p.engines&&p.engines.node)||''))}catch(e){}" | head -n 1)"
+            echo "Versión de Node tomada de backend/package.json (engines.node): $version"
+          fi
+          if [ -z "$version" ]; then
+            version="20"
+            echo "No se encontró .nvmrc ni engines.node: se usa Node 20 LTS."
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+      - name: Setup Node.js
+        if: steps.check-backend.outputs.exists == 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ steps.node-version.outputs.version }}
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Detectar migraciones de Prisma
+        id: check-migrations
+        if: steps.check-backend.outputs.exists == 'true'
+        run: |
+          if [ -d backend/prisma/migrations ] && [ -n "$(ls -A backend/prisma/migrations 2>/dev/null)" ]; then
+            echo "Migraciones encontradas: se ejecuta prisma migrate deploy."
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::notice::No existe backend/prisma/migrations todavía; se omite 'prisma migrate deploy'."
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Instalar dependencias
+        if: steps.check-backend.outputs.exists == 'true'
+        working-directory: backend
+        run: npm ci
+
+      - name: Generar cliente de Prisma
+        if: steps.check-backend.outputs.exists == 'true'
+        working-directory: backend
+        run: npx prisma generate
+
+      - name: Aplicar migraciones
+        if: steps.check-backend.outputs.exists == 'true' && steps.check-migrations.outputs.exists == 'true'
+        working-directory: backend
+        run: npx prisma migrate deploy
+
+      - name: Tests
+        if: steps.check-backend.outputs.exists == 'true'
+        working-directory: backend
+        run: npm test
+
+  frontend-build:
+    name: frontend-build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Detectar frontend
+        id: check-frontend
+        run: |
+          if [ -f frontend/package.json ]; then
+            echo "Frontend detectado: se ejecutan lint y build."
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::notice::La carpeta frontend todavía no existe (se creará con 'create-next-app'); se omite frontend-build."
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Setup Node.js
+        if: steps.check-frontend.outputs.exists == 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Detectar script lint
+        id: check-lint
+        if: steps.check-frontend.outputs.exists == 'true'
+        run: |
+          node -e "const p=require('./frontend/package.json');process.exit(p.scripts&&p.scripts.lint?0:1)" && status=0 || status=$?
+          if [ "$status" -eq 0 ]; then
+            echo "El script \"lint\" existe en frontend/package.json: se ejecuta npm run lint."
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          elif [ "$status" -eq 1 ]; then
+            echo "::notice::frontend/package.json no define el script \"lint\"; se omite 'npm run lint'."
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "::notice::No se pudo leer frontend/package.json; se omite 'npm run lint'."
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Instalar dependencias
+        if: steps.check-frontend.outputs.exists == 'true'
+        working-directory: frontend
+        run: npm ci
+
+      - name: Lint
+        if: steps.check-frontend.outputs.exists == 'true' && steps.check-lint.outputs.exists == 'true'
+        working-directory: frontend
+        run: npm run lint
+
+      - name: Build
+        if: steps.check-frontend.outputs.exists == 'true'
+        working-directory: frontend
+        run: npm run build

@@ -1,0 +1,19 @@
+# Dependencias
+node_modules
+
+# Build
+dist
+build
+*.tsbuildinfo
+
+# Tests
+coverage
+.vitest
+
+# Variables de entorno (nunca commitear secretos)
+.env
+.env.*
+!.env.example
+
+# Cliente de Prisma generado
+/src/generated/prisma

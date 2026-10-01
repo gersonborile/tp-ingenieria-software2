@@ -248,14 +248,6 @@ async function seedEquipamientos() {
       select: { id: true },
     });
     if (existente) {
-      await prisma.equipamiento.update({
-        where: { id: existente.id },
-        data: {
-          stockTotal: equipamiento.stock,
-          stockDisponible: equipamiento.stock,
-          precioUnitario: equipamiento.precioUnitario,
-        },
-      });
       continue;
     }
     await prisma.equipamiento.create({

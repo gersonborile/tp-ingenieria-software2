@@ -250,7 +250,11 @@ async function seedEquipamientos() {
     if (existente) {
       await prisma.equipamiento.update({
         where: { id: existente.id },
-        data: { stock: equipamiento.stock, precioUnitario: equipamiento.precioUnitario },
+        data: {
+          stockTotal: equipamiento.stock,
+          stockDisponible: equipamiento.stock,
+          precioUnitario: equipamiento.precioUnitario,
+        },
       });
       continue;
     }
@@ -258,7 +262,8 @@ async function seedEquipamientos() {
       data: {
         nombre: equipamiento.nombre,
         disciplinaId: disciplina.id,
-        stock: equipamiento.stock,
+        stockTotal: equipamiento.stock,
+        stockDisponible: equipamiento.stock,
         precioUnitario: equipamiento.precioUnitario,
       },
     });
@@ -315,7 +320,7 @@ async function seedReservaEjemplo(usuarioIds: Record<string, string>, canchaIds:
 
   await prisma.equipamiento.update({
     where: { id: raqueta.id },
-    data: { stock: { decrement: 2 } },
+    data: { stockDisponible: { decrement: 2 } },
   });
 
   console.log(`Reserva de ejemplo creada: ${reserva.id}`);

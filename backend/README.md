@@ -120,28 +120,35 @@ Definido en `prisma/schema.prisma` a partir de `openspec/config.yaml`:
 - `Cancha` — nombre único, ubicación, capacidad, `estado`
   (`DISPONIBLE`/`OCUPADA`/`EN_MANTENIMIENTO`) y relación many-to-many con `Disciplina`.
 - `Turno` — `canchaId`, `disciplinaId`, `fecha` (`DATE`), `horaInicio`/`horaFin` (`"HH:mm"`)
-  y el flag `disponible`, que el change de reservas pone en `false` al reservar.
+  y el flag `disponible`, que el change de reservas pone en `false` al reservar. Único por
+  `(canchaId, fecha, horaInicio)`: no hay dos turnos con el mismo inicio en la misma cancha.
 - `Reserva` — `usuarioId`, `turnoId`, `estado` (`CONFIRMADA`/`CANCELADA`).
-- `Equipamiento` — `disciplinaId`, `stock`, `activo` y `precioUnitario`.
-- `ReservaEquipamiento` — tabla intermedia con `cantidad` y snapshot de `precioUnitario`.
+- `Equipamiento` — `disciplinaId`, `stockTotal`, `stockDisponible`, `activo` y `precioUnitario`.
+- `ReservaEquipamiento` — tabla intermedia con `cantidad`, snapshot de `precioUnitario` y
+  `estadoDevolucion` (`PENDIENTE`/`DEVUELTO`).
 - `Pago` — `reservaId` único, `monto`, `metodoPago`, `estado`
-  (`PENDIENTE`/`PAGADO`/`ANULADO`), `fecha` y `fechaPago`.
+  (`PENDIENTE`/`PAGADO`/`ANULADO`) y `fechaPago` opcional, que se setea al confirmar el cobro.
 
 Todas las tablas usan UUID, `created_at`/`updated_at` y nombres en `snake_case`.
 
-### Índice único parcial de reservas
+### Restricciones que Prisma no modela
 
-`prisma/migrations/0_init/migration.sql` agrega un índice único parcial que impide dos
-reservas activas sobre el mismo turno:
+Prisma no declara CHECKs ni índices filtrados, así que `prisma/migrations/0_init/migration.sql`
+los agrega con SQL crudo después de las tablas:
 
 ```sql
+-- Invariante de stock: 0 <= stock_disponible <= stock_total
+ALTER TABLE "equipamientos"
+  ADD CONSTRAINT "equipamientos_stock_check"
+  CHECK ("stock_disponible" BETWEEN 0 AND "stock_total");
+
+-- Un turno no puede tener dos reservas activas
 CREATE UNIQUE INDEX "reservas_turno_unico_activo"
   ON "reservas" ("turno_id") WHERE "estado" = 'CONFIRMADA';
 ```
 
-Como Prisma no declara índices filtrados en el schema, un `prisma migrate dev` futuro puede
-proponer dropearlo. Si aparece en el diff, hay que volver a agregarlo al final de la
-migración generada.
+Como no están en `schema.prisma`, un `prisma migrate dev` futuro puede proponer dropearlos.
+Si aparecen en el diff, hay que volver a agregarlos al final de la migración generada.
 
 ## Estructura
 

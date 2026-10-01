@@ -116,6 +116,16 @@ jobs:
         working-directory: backend
         run: npx prisma migrate deploy
 
+      - name: Build
+        if: steps.check-backend.outputs.exists == 'true'
+        working-directory: backend
+        run: npm run build
+
+      - name: Lint
+        if: steps.check-backend.outputs.exists == 'true'
+        working-directory: backend
+        run: npm run lint
+
       - name: Tests
         if: steps.check-backend.outputs.exists == 'true'
         working-directory: backend

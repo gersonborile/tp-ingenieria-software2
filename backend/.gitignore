@@ -16,4 +16,4 @@ coverage
 !.env.example
 
 # Cliente de Prisma generado
-/src/generated/prisma
+/src/generated

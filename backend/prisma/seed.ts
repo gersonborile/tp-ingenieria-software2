@@ -272,8 +272,9 @@ async function seedEquipamientos() {
 
 async function seedReservaEjemplo(usuarioIds: Record<string, string>, canchaIds: Record<string, string>) {
   const turno = await prisma.turno.findFirstOrThrow({
-    where: { canchaId: canchaIds["Cancha de Tenis 1"], disponible: true },
-    orderBy: [{ fecha: "asc" }, { horaInicio: "asc" }],
+    where: { canchaId: canchaIds["Cancha de Tenis 1"], horaInicio: "09:00" },
+    orderBy: { fecha: "asc" },
+    select: { id: true },
   });
 
   const reservaExistente = await prisma.reserva.findFirst({

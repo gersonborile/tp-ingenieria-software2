@@ -76,8 +76,8 @@ jobs:
             echo "Versión de Node tomada de backend/package.json (engines.node): $version"
           fi
           if [ -z "$version" ]; then
-            version="20"
-            echo "No se encontró .nvmrc ni engines.node: se usa Node 20 LTS."
+            version="24"
+            echo "No se encontró .nvmrc ni engines.node: se usa Node 24."
           fi
           echo "version=$version" >> "$GITHUB_OUTPUT"
 

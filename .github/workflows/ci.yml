@@ -76,8 +76,8 @@ jobs:
             echo "Versión de Node tomada de backend/package.json (engines.node): $version"
           fi
           if [ -z "$version" ]; then
-            version="20"
-            echo "No se encontró .nvmrc ni engines.node: se usa Node 20 LTS."
+            version="24"
+            echo "No se encontró .nvmrc ni engines.node: se usa Node 24."
           fi
           echo "version=$version" >> "$GITHUB_OUTPUT"
 
@@ -115,6 +115,16 @@ jobs:
         if: steps.check-backend.outputs.exists == 'true' && steps.check-migrations.outputs.exists == 'true'
         working-directory: backend
         run: npx prisma migrate deploy
+
+      - name: Build
+        if: steps.check-backend.outputs.exists == 'true'
+        working-directory: backend
+        run: npm run build
+
+      - name: Lint
+        if: steps.check-backend.outputs.exists == 'true'
+        working-directory: backend
+        run: npm run lint
 
       - name: Tests
         if: steps.check-backend.outputs.exists == 'true'

@@ -1,0 +1,170 @@
+generator client {
+  provider     = "prisma-client"
+  output       = "../src/generated/prisma"
+  moduleFormat = "esm"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum RolUsuario {
+  USUARIO
+  ADMINISTRADOR
+}
+
+enum EstadoCancha {
+  DISPONIBLE
+  OCUPADA
+  EN_MANTENIMIENTO
+}
+
+enum EstadoReserva {
+  CONFIRMADA
+  CANCELADA
+}
+
+enum MetodoPago {
+  EFECTIVO
+  TRANSFERENCIA
+  TARJETA
+}
+
+enum EstadoPago {
+  PENDIENTE
+  PAGADO
+  ANULADO
+}
+
+enum EstadoDevolucion {
+  PENDIENTE
+  DEVUELTO
+}
+
+model Usuario {
+  id           String     @id @default(uuid()) @db.Uuid
+  nombre       String
+  email        String     @unique
+  passwordHash String     @map("password_hash")
+  rol          RolUsuario @default(USUARIO)
+  contacto     String?
+  tipo         String?
+  membresia    String?
+  reservas     Reserva[]
+  createdAt    DateTime   @default(now()) @map("created_at")
+  updatedAt    DateTime   @updatedAt @map("updated_at")
+
+  @@map("usuarios")
+}
+
+model Disciplina {
+  id                    String         @id @default(uuid()) @db.Uuid
+  nombre                String         @unique
+  duracionTipicaMinutos Int?           @map("duracion_tipica_minutos")
+  reglas                String?
+  canchas               Cancha[]
+  turnos                Turno[]
+  equipamientos         Equipamiento[]
+  createdAt             DateTime       @default(now()) @map("created_at")
+  updatedAt             DateTime       @updatedAt @map("updated_at")
+
+  @@map("disciplinas")
+}
+
+model Cancha {
+  id          String       @id @default(uuid()) @db.Uuid
+  nombre      String       @unique
+  ubicacion   String
+  capacidad   Int
+  estado      EstadoCancha @default(DISPONIBLE)
+  disciplinas Disciplina[]
+  turnos      Turno[]
+  createdAt   DateTime     @default(now()) @map("created_at")
+  updatedAt   DateTime     @updatedAt @map("updated_at")
+
+  @@map("canchas")
+}
+
+model Turno {
+  id           String     @id @default(uuid()) @db.Uuid
+  canchaId     String     @map("cancha_id") @db.Uuid
+  disciplinaId String     @map("disciplina_id") @db.Uuid
+  fecha        DateTime   @db.Date
+  horaInicio   String     @map("hora_inicio")
+  horaFin      String     @map("hora_fin")
+  disponible   Boolean    @default(true)
+  cancha       Cancha     @relation(fields: [canchaId], references: [id], onDelete: Restrict)
+  disciplina   Disciplina @relation(fields: [disciplinaId], references: [id], onDelete: Restrict)
+  reservas     Reserva[]
+  createdAt    DateTime   @default(now()) @map("created_at")
+  updatedAt    DateTime   @updatedAt @map("updated_at")
+
+  @@unique([canchaId, fecha, horaInicio])
+  @@index([disciplinaId, fecha])
+  @@map("turnos")
+}
+
+model Reserva {
+  id            String                @id @default(uuid()) @db.Uuid
+  usuarioId     String                @map("usuario_id") @db.Uuid
+  turnoId       String                @map("turno_id") @db.Uuid
+  estado        EstadoReserva         @default(CONFIRMADA)
+  usuario       Usuario               @relation(fields: [usuarioId], references: [id], onDelete: Restrict)
+  turno         Turno                 @relation(fields: [turnoId], references: [id], onDelete: Restrict)
+  equipamientos ReservaEquipamiento[]
+  pago          Pago?
+  createdAt     DateTime              @default(now()) @map("created_at")
+  updatedAt     DateTime              @updatedAt @map("updated_at")
+
+  @@index([turnoId, estado])
+  @@index([usuarioId])
+  @@map("reservas")
+}
+
+model Equipamiento {
+  id              String                @id @default(uuid()) @db.Uuid
+  nombre          String
+  disciplinaId    String                @map("disciplina_id") @db.Uuid
+  stockTotal      Int                   @default(0) @map("stock_total")
+  stockDisponible Int                   @default(0) @map("stock_disponible")
+  activo          Boolean               @default(true)
+  precioUnitario  Decimal               @default(0) @map("precio_unitario") @db.Decimal(10, 2)
+  disciplina      Disciplina            @relation(fields: [disciplinaId], references: [id], onDelete: Restrict)
+  reservas        ReservaEquipamiento[]
+  createdAt       DateTime              @default(now()) @map("created_at")
+  updatedAt       DateTime              @updatedAt @map("updated_at")
+
+  @@index([disciplinaId])
+  @@map("equipamientos")
+}
+
+model ReservaEquipamiento {
+  reservaId        String           @map("reserva_id") @db.Uuid
+  equipamientoId   String           @map("equipamiento_id") @db.Uuid
+  cantidad         Int
+  precioUnitario   Decimal          @map("precio_unitario") @db.Decimal(10, 2)
+  estadoDevolucion EstadoDevolucion @default(PENDIENTE) @map("estado_devolucion")
+  reserva          Reserva          @relation(fields: [reservaId], references: [id], onDelete: Cascade)
+  equipamiento     Equipamiento     @relation(fields: [equipamientoId], references: [id], onDelete: Restrict)
+  createdAt        DateTime         @default(now()) @map("created_at")
+  updatedAt        DateTime         @updatedAt @map("updated_at")
+
+  @@id([reservaId, equipamientoId])
+  @@index([equipamientoId])
+  @@map("reserva_equipamientos")
+}
+
+model Pago {
+  id         String     @id @default(uuid()) @db.Uuid
+  reservaId  String     @unique @map("reserva_id") @db.Uuid
+  monto      Decimal    @db.Decimal(10, 2)
+  metodoPago MetodoPago @map("metodo_pago")
+  estado     EstadoPago @default(PENDIENTE)
+  fechaPago  DateTime?  @map("fecha_pago")
+  reserva    Reserva    @relation(fields: [reservaId], references: [id], onDelete: Restrict)
+  createdAt  DateTime   @default(now()) @map("created_at")
+  updatedAt  DateTime   @updatedAt @map("updated_at")
+
+  @@index([estado])
+  @@map("pagos")
+}

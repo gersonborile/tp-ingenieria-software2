@@ -8,7 +8,7 @@ del sistema.
 
 ### Requirement: Registro de usuario
 El sistema SHALL permitir que una persona se registre como socio proporcionando nombre,
-contacto, tipo, membresía, email y contraseña. El email SHALL ser único en el sistema y
+contacto, email y contraseña. El email SHALL ser único en el sistema y
 la contraseña SHALL almacenarse únicamente de forma hasheada. El usuario registrado
 SHALL obtener el rol `usuario`.
 

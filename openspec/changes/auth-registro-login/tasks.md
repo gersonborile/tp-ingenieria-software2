@@ -41,7 +41,7 @@
 
 ## 7. Frontend: registro y login
 
-- [x] 7.1 Crear página `/registro` con el formulario (nombre, contacto, tipo, membresía, email, contraseña) que consume el endpoint de registro y verificar que muestra éxito y errores (email duplicado, validación)
+- [x] 7.1 Crear página `/registro` con el formulario (nombre, contacto, email, contraseña) que consume el endpoint de registro y verificar que muestra éxito y errores (email duplicado, validación)
 - [x] 7.2 Crear página `/login` que consume el endpoint de login, guarda la sesión del usuario en el cliente y verificar que tras loguearse el usuario autenticado llega al área protegida
 - [x] 7.3 Implementar manejo/logout: limpiar sesión en el cliente y verificar que las peticiones posteriores no quedan autenticadas
 - [x] 7.4 Verificar typecheck y build del frontend sin errores

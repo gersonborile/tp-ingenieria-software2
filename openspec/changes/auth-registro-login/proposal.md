@@ -11,7 +11,7 @@ cada actor.
 ## What Changes
 
 - Nuevo módulo de autenticación en el backend (NestJS) con registro e inicio de sesión.
-- Registro de usuarios: el socio se registra con nombre, contacto, tipo y membresía, más
+- Registro de usuarios: el socio se registra con nombre y contacto, más
   credencial de acceso (email + contraseña).
 - Inicio de sesión: el usuario se autentica y obtiene un token de sesión (JWT) que
   identifica su identidad y rol en las peticiones posteriores.

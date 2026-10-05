@@ -5,8 +5,8 @@
 El repositorio no tiene aún código de backend ni frontend (solo `openspec/`). La
 capability `user-auth` es la primera en implementarse y sentará las bases de seguridad
 para el resto del sistema de reservas. El modelo `User` previsto en el dominio es
-`(id, nombre, tipo, contacto, membresía)`; este cambio lo extiende con las credenciales
-de acceso. Ver `proposal.md` para la motivación y `specs/user-auth/spec.md` para el
+`(id, nombre, contacto)`, sin tipo ni membresía (fuera del alcance del MVP); este cambio
+lo extiende con las credenciales de acceso. Ver `proposal.md` para la motivación y `specs/user-auth/spec.md` para el
 contrato de comportamiento.
 
 ## Goals / Non-Goals

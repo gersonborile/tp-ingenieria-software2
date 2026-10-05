@@ -1,15 +1,15 @@
 ## 1. Navbar, protección de rutas y capa mock
 
-- [ ] 1.1 Crear la capa mock en `lib/` (tipos `Cancha`, `Franja`, `Equipamiento`, `Reserva` y funciones para canchas, equipamiento, crear reserva, próxima reserva y canchas disponibles ahora; las reservas persisten en `localStorage`) y verificar que typecheck, lint y build pasan sin errores.
-- [ ] 1.2 Crear el layout protegido (`app/(protegido)/layout.tsx`) con un guard del lado del cliente que lee la sesión de `lib/sesion.ts`, redirige a `/login` sin sesión y no renderiza el contenido hasta resolverla, y verificar que acceder a `/`, `/canchas` o `/canchas/[id]/reservar` sin sesión redirige a `/login`.
-- [ ] 1.3 Crear la Navbar compartida (logo "CD" + "Club Deportivo", links "Inicio", "Canchas" y "Mis reservas" placeholder, link activo subrayado, avatar con la inicial) con menú "Cerrar sesión", incluirla en el layout protegido y verificar que se ve en todas las pantallas protegidas y que cerrar sesión redirige a `/login`.
+- [x] 1.1 Crear la capa mock en `lib/` (tipos `Cancha`, `Franja`, `Equipamiento`, `Reserva` y funciones para canchas, equipamiento, crear reserva, próxima reserva y canchas disponibles ahora; las reservas persisten en `localStorage`) y verificar que typecheck, lint y build pasan sin errores.
+- [x] 1.2 Crear el layout protegido (`app/(protegido)/layout.tsx`) con un guard del lado del cliente que lee la sesión de `lib/sesion.ts`, redirige a `/login` sin sesión y no renderiza el contenido hasta resolverla, y verificar que acceder a `/`, `/canchas` o `/canchas/[id]/reservar` sin sesión redirige a `/login`.
+- [x] 1.3 Crear la Navbar compartida (logo "CD" + "Club Deportivo", links "Inicio", "Canchas" y "Mis reservas" placeholder, link activo subrayado, avatar con la inicial) con menú "Cerrar sesión", incluirla en el layout protegido y verificar que se ve en todas las pantallas protegidas y que cerrar sesión redirige a `/login`.
 
 ## 2. Pantalla 1 — Canchas y disponibilidad (`/canchas`)
 
-- [ ] 2.1 Implementar `/canchas` con título, subtítulo y barra de filtros (Disciplina, fecha, Horario y botón "Buscar") y verificar que los controles se renderizan y que `?disciplina=` preselecciona la disciplina.
-- [ ] 2.2 Listar las canchas con imagen placeholder, nombre, disciplina y franjas de 16:00 a 21:00, con franja libre habilitada y ocupada gris, tachada y deshabilitada, y verificar los estados según los datos mock.
-- [ ] 2.3 Aplicar los filtros al hacer click en "Buscar" y verificar que la lista se acota por disciplina y, si se elige un horario, a esa franja.
-- [ ] 2.4 Al elegir una franja libre, navegar a `/canchas/[id]/reservar?fecha=...&hora=...` y verificar que la navegación lleva la fecha y la hora elegidas.
+- [x] 2.1 Implementar `/canchas` con título, subtítulo y barra de filtros (Disciplina, fecha, Horario y botón "Buscar") y verificar que los controles se renderizan y que `?disciplina=` preselecciona la disciplina.
+- [x] 2.2 Listar las canchas con imagen placeholder, nombre, disciplina y franjas de 16:00 a 21:00, con franja libre habilitada y ocupada gris, tachada y deshabilitada, y verificar los estados según los datos mock.
+- [x] 2.3 Aplicar los filtros al hacer click en "Buscar" y verificar que la lista se acota por disciplina y, si se elige un horario, a esa franja.
+- [x] 2.4 Al elegir una franja libre, navegar a `/canchas/[id]/reservar?fecha=...&hora=...` y verificar que la navegación lleva la fecha y la hora elegidas.
 
 ## 3. Pantalla 2 — Confirmar reserva (`/canchas/[id]/reservar`)
 

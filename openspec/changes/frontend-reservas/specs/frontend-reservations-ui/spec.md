@@ -87,13 +87,9 @@ disciplina y botones de franja horaria de 16:00 a 21:00.
 - **THEN** el sistema navega a `/canchas/[id]/reservar` con la fecha y la hora elegidas
 
 ### Requirement: Pantalla Confirmar reserva
-El sistema SHALL ofrecer `/canchas/[id]/reservar` con un breadcrumb "Canchas > {cancha} ·
-{disciplina} > Reservar" y el título "Confirmar reserva". La columna izquierda SHALL mostrar
-"Turno seleccionado" (cancha, disciplina, fecha y hora) con el botón "Cambiar turno", y
-"Equipamiento (opcional)" con checkbox, nombre, "N disponibles" e input de cantidad por
-ítem. La columna derecha SHALL mostrar "Resumen" (cancha, fecha, equipamiento elegido,
-estado de pago "Pendiente" y monto total placeholder) y el botón "Confirmar reserva", con
-la nota "Podés cancelar hasta 2 horas antes del turno".
+El sistema SHALL ofrecer `/canchas/[id]/reservar` con el título "Confirmar reserva", el
+turno elegido, la selección opcional de equipamiento y un resumen con el botón "Confirmar
+reserva". El detalle de cada bloque se describe en los scenarios.
 
 #### Scenario: Turno seleccionado
 - **WHEN** un usuario navega a `/canchas/[id]/reservar` con una fecha y una hora

@@ -36,9 +36,9 @@ jobs:
       postgres:
         image: postgres:16
         env:
-          POSTGRES_USER: club_test
-          POSTGRES_PASSWORD: club_test
-          POSTGRES_DB: club_test
+          POSTGRES_USER: ${{ secrets.TEST_DB_USER }}
+          POSTGRES_PASSWORD: ${{ secrets.TEST_DB_PASSWORD }}
+          POSTGRES_DB: ${{ secrets.TEST_DB_NAME }}
         ports:
           - 5432:5432
         options: >-
@@ -47,7 +47,7 @@ jobs:
           --health-timeout 5s
           --health-retries 5
     env:
-      DATABASE_URL: postgresql://club_test:club_test@localhost:5432/club_test
+      DATABASE_URL: postgresql://${{ secrets.TEST_DB_USER }}:${{ secrets.TEST_DB_PASSWORD }}@localhost:5432/${{ secrets.TEST_DB_NAME }}
       NODE_ENV: test
     steps:
       - name: Checkout

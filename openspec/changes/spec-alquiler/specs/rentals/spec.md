@@ -5,7 +5,7 @@ Modela el alquiler de equipamiento como entidad propia asociada a una reserva co
 ## ADDED Requirements
 
 ### Requirement: Alquiler de equipamiento para una reserva
-El sistema SHALL permitir crear un alquiler de equipamiento mediante `POST /api/v1/reservas/:id/alquiler`. El cuerpo SHALL incluir `items` (array de `{ equipmentId, quantity }` con `quantity >= 1`). La reserva SHALL estar en estado `confirmed`. Un usuario `socio` SHALL poder alquilar solo sobre sus propias reservas; `admin`/`recepcionista` SHALL poder alquilar sobre cualquier reserva. Una reserva SHALL tener a lo sumo un alquiler.
+El sistema SHALL permitir crear un alquiler de equipamiento mediante `POST /api/v1/reservas/:id/alquiler`. El cuerpo SHALL incluir `items` (array de `{ equipamientoId, quantity }` con `quantity >= 1`). La reserva SHALL estar en estado `confirmed`. Un usuario `socio` SHALL poder alquilar solo sobre sus propias reservas; `admin`/`recepcionista` SHALL poder alquilar sobre cualquier reserva. Una reserva SHALL tener a lo sumo un alquiler.
 
 #### Scenario: Crear alquiler válido
 - **WHEN** un usuario autenticado hace `POST /api/v1/reservas/:id/alquiler` sobre una reserva `confirmed` con items válidos y stock suficiente
@@ -24,11 +24,11 @@ El sistema SHALL permitir crear un alquiler de equipamiento mediante `POST /api/
 - **THEN** el sistema responde `409 Conflict` y no crea un segundo alquiler
 
 #### Scenario: Equipamiento inexistente
-- **WHEN** un usuario autenticado hace `POST /api/v1/reservas/:id/alquiler` con un `equipmentId` que no existe
+- **WHEN** un usuario autenticado hace `POST /api/v1/reservas/:id/alquiler` con un `equipamientoId` que no existe
 - **THEN** el sistema responde `404 Not Found` y no crea el alquiler
 
 #### Scenario: Stock insuficiente
-- **WHEN** un usuario autenticado hace `POST /api/v1/reservas/:id/alquiler` con un item cuya `quantity` supera el `availableStock`
+- **WHEN** un usuario autenticado hace `POST /api/v1/reservas/:id/alquiler` con un item cuya `quantity` supera el `stock_disponible`
 - **THEN** el sistema responde `409 Conflict`, no crea el alquiler y no descuenta stock
 
 #### Scenario: Socio intenta alquilar sobre una reserva ajena
@@ -40,23 +40,23 @@ El sistema SHALL permitir crear un alquiler de equipamiento mediante `POST /api/
 - **THEN** el sistema responde `401 Unauthorized`
 
 ### Requirement: Montos del alquiler
-El sistema SHALL registrar para cada item del alquiler el `pricePerUnit` vigente del catálogo de equipamiento en el momento de la creación y SHALL calcular `totalAmount` por item como `pricePerUnit * quantity`. El alquiler SHALL exponer su `totalAmount` como la suma de los `totalAmount` de sus items. El precio SHALL quedar congelado en el alquiler aunque el catálogo cambie luego.
+El sistema SHALL registrar para cada item del alquiler el `precio_unitario` vigente del catálogo de equipamiento en el momento de la creación y SHALL calcular `totalAmount` por item como `precio_unitario * quantity`. El alquiler SHALL exponer su `totalAmount` como la suma de los `totalAmount` de sus items. El precio SHALL quedar congelado en el alquiler aunque el catálogo cambie luego.
 
 #### Scenario: Monto calculado del catálogo
-- **WHEN** se crea un alquiler con un item de `quantity: 2` y `pricePerUnit: 500` en el catálogo
+- **WHEN** se crea un alquiler con un item de `quantity: 2` y `precio_unitario: 500` en el catálogo
 - **THEN** la respuesta incluye `totalAmount: 1000` para el item y el `totalAmount` del alquiler es `1000`
 
 #### Scenario: El precio queda congelado en el alquiler
-- **WHEN** el `pricePerUnit` del equipamiento cambia en el catálogo después de crear el alquiler
-- **THEN** el alquiler conserva el `pricePerUnit` y `totalAmount` registrados al momento de su creación
+- **WHEN** el `precio_unitario` del equipamiento cambia en el catálogo después de crear el alquiler
+- **THEN** el alquiler conserva el `precio_unitario` y `totalAmount` registrados al momento de su creación
 
 ### Requirement: Stock del alquiler
-El sistema SHALL descontar `quantity` del `availableStock` de cada equipamiento al crear el alquiler, y SHALL restituir ese `availableStock` al cancelar la reserva asociada.
+El sistema SHALL descontar `quantity` del `stock_disponible` de cada equipamiento al crear el alquiler, y SHALL restituir ese `stock_disponible` al cancelar la reserva asociada.
 
 #### Scenario: Descuento de stock al crear el alquiler
 - **WHEN** un alquiler se crea con un item de `quantity: 3`
-- **THEN** el `availableStock` de ese equipamiento en el catálogo queda reducido en `3`
+- **THEN** el `stock_disponible` de ese equipamiento en el catálogo queda reducido en `3`
 
 #### Scenario: Liberación de stock al cancelar la reserva
 - **WHEN** la reserva asociada a un alquiler se cancela mediante `PATCH /api/v1/reservas/:id/cancelar`
-- **THEN** el `availableStock` de los equipamientos del alquiler vuelve a incrementarse en las cantidades alquiladas
+- **THEN** el `stock_disponible` de los equipamientos del alquiler vuelve a incrementarse en las cantidades alquiladas

@@ -44,7 +44,7 @@ El sistema SHALL permitir cancelar una reserva mediante `PATCH /api/v1/reservas/
 
 #### Scenario: Cancelar reserva propia dentro de la ventana
 - **WHEN** un usuario `socio` hace `PATCH /api/v1/reservas/:id/cancelar` sobre una de sus reservas que comienza en más de 2 horas
-- **THEN** el sistema responde `200 OK`, la reserva queda en estado `cancelled` y se restituye el `availableStock` de los items del alquiler asociado
+- **THEN** el sistema responde `200 OK`, la reserva queda en estado `cancelled` y se restituye el `stock_disponible` de los items del alquiler asociado
 
 #### Scenario: Cancelar por recepcionista en nombre de un socio
 - **WHEN** un usuario `recepcionista` hace `PATCH /api/v1/reservas/:id/cancelar` sobre una reserva de otro socio dentro de la ventana

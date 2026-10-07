@@ -1,17 +1,17 @@
 ## Purpose
 
-Permite al club administrar el catálogo de equipamiento deportivo (raquetas, pelotas, redes, etc.) por disciplina, con stock e inventario, disponibilidad derivada del stock, y lectura pública; como base previa para futuros préstamos o alquileres.
+Permite al club administrar el catálogo de equipamiento deportivo (raquetas, pelotas, redes, etc.) por disciplina, con stock total y disponible, precio unitario, disponibilidad derivada del stock disponible, y lectura pública; como base previa para futuros préstamos o alquileres.
 
 ## ADDED Requirements
 
 ### Requirement: Consultar catálogo de equipamiento
 
-El sistema SHALL permitir listar los ítems de equipamiento del club con su disciplina, stock y disponibilidad, y consultar el detalle de un ítem individual, sin requerir autenticación.
+El sistema SHALL permitir listar los ítems de equipamiento del club con su disciplina, stock, precio y disponibilidad, y consultar el detalle de un ítem individual, sin requerir autenticación.
 
 #### Scenario: Listado de todos los ítems
 
 - **WHEN** un cliente consulta `GET /equipamiento`
-- **THEN** el sistema responde 200 con la lista de ítems de equipamiento activos; cada ítem incluye `id`, `nombre`, `disciplina_id`, `stock`, `activo` y `disponible`
+- **THEN** el sistema responde 200 con la lista de ítems de equipamiento activos; cada ítem incluye `id`, `nombre`, `disciplina_id`, `stock_total`, `stock_disponible`, `precio_unitario`, `activo` y `disponible`
 
 #### Scenario: Listado filtrado por disciplina
 
@@ -21,7 +21,7 @@ El sistema SHALL permitir listar los ítems de equipamiento del club con su disc
 #### Scenario: Listado filtrado por disponibilidad
 
 - **WHEN** un cliente consulta `GET /equipamiento?disponible=true`
-- **THEN** el sistema responde 200 solo con los ítems activos cuyo `stock` es mayor que 0
+- **THEN** el sistema responde 200 solo con los ítems activos cuyo `stock_disponible` es mayor que 0
 
 #### Scenario: Listado que incluye ítems inactivos
 
@@ -31,7 +31,7 @@ El sistema SHALL permitir listar los ítems de equipamiento del club con su disc
 #### Scenario: Detalle de un ítem existente
 
 - **WHEN** un cliente consulta `GET /equipamiento/:id` con un id existente
-- **THEN** el sistema responde 200 con el ítem solicitado, incluyendo disciplina, stock, `activo` y `disponible`
+- **THEN** el sistema responde 200 con el ítem solicitado, incluyendo disciplina, `stock_total`, `stock_disponible`, `precio_unitario`, `activo` y `disponible`
 
 #### Scenario: Detalle de un ítem inexistente
 
@@ -40,12 +40,12 @@ El sistema SHALL permitir listar los ítems de equipamiento del club con su disc
 
 ### Requirement: Crear ítem de equipamiento
 
-El sistema SHALL permitir al administrador crear un ítem de equipamiento con disciplina existente, nombre no vacío y `stock` no negativo.
+El sistema SHALL permitir al administrador crear un ítem de equipamiento con disciplina existente, nombre no vacío, `stock_total` y `precio_unitario` no negativos.
 
 #### Scenario: Crear un ítem válido
 
-- **WHEN** un administrador envía `POST /equipamiento` con un `nombre` no vacío, una `disciplina_id` existente y un `stock` mayor o igual a 0
-- **THEN** el sistema responde 201 con el ítem creado, incluyendo su `id`, `disponible` igual a `stock > 0` y `activo` igual a `true`
+- **WHEN** un administrador envía `POST /equipamiento` con un `nombre` no vacío, una `disciplina_id` existente, un `stock_total` y un `precio_unitario` mayores o iguales a 0
+- **THEN** el sistema responde 201 con el ítem creado, con `stock_disponible` igual a `stock_total`, `disponible` igual a `stock_disponible > 0` y `activo` igual a `true`
 
 #### Scenario: Crear ítem con disciplina inexistente
 
@@ -54,7 +54,12 @@ El sistema SHALL permitir al administrador crear un ítem de equipamiento con di
 
 #### Scenario: Crear ítem con stock negativo
 
-- **WHEN** un administrador envía `POST /equipamiento` con un `stock` menor que 0
+- **WHEN** un administrador envía `POST /equipamiento` con un `stock_total` menor que 0
+- **THEN** el sistema responde 400 y no crea el ítem
+
+#### Scenario: Crear ítem con precio negativo
+
+- **WHEN** un administrador envía `POST /equipamiento` con un `precio_unitario` menor que 0
 - **THEN** el sistema responde 400 y no crea el ítem
 
 #### Scenario: Crear ítem con nombre faltante
@@ -64,17 +69,17 @@ El sistema SHALL permitir al administrador crear un ítem de equipamiento con di
 
 #### Scenario: Crear ítem con datos faltantes
 
-- **WHEN** un administrador envía `POST /equipamiento` sin `nombre`, `disciplina_id` o `stock`
+- **WHEN** un administrador envía `POST /equipamiento` sin `nombre`, `disciplina_id`, `stock_total` o `precio_unitario`
 - **THEN** el sistema responde 400 y no crea el ítem
 
 ### Requirement: Modificar ítem de equipamiento
 
-El sistema SHALL permitir al administrador modificar un ítem existente, revalidando nombre, disciplina y stock.
+El sistema SHALL permitir al administrador modificar un ítem existente, revalidando nombre, disciplina, stock y precio.
 
 #### Scenario: Modificar un ítem existente
 
 - **WHEN** un administrador envía `PATCH /equipamiento/:id` con datos válidos para un ítem existente
-- **THEN** el sistema responde 200 con el ítem actualizado, incluyendo su `disponible` recalculado según el nuevo `stock`
+- **THEN** el sistema responde 200 con el ítem actualizado, incluyendo su `disponible` recalculado según el nuevo `stock_disponible`
 
 #### Scenario: Modificar ítem inexistente
 
@@ -83,7 +88,17 @@ El sistema SHALL permitir al administrador modificar un ítem existente, revalid
 
 #### Scenario: Modificar ítem con stock negativo
 
-- **WHEN** un administrador envía `PATCH /equipamiento/:id` con un `stock` menor que 0
+- **WHEN** un administrador envía `PATCH /equipamiento/:id` con un `stock_total` o un `stock_disponible` menor que 0
+- **THEN** el sistema responde 400 y no modifica el ítem
+
+#### Scenario: Modificar ítem con stock disponible mayor al total
+
+- **WHEN** un administrador envía `PATCH /equipamiento/:id` dejando `stock_disponible` mayor que `stock_total`
+- **THEN** el sistema responde 400 y no modifica el ítem
+
+#### Scenario: Modificar ítem con precio negativo
+
+- **WHEN** un administrador envía `PATCH /equipamiento/:id` con un `precio_unitario` menor que 0
 - **THEN** el sistema responde 400 y no modifica el ítem
 
 #### Scenario: Modificar ítem con disciplina inexistente
@@ -117,12 +132,12 @@ El sistema SHALL permitir al administrador eliminar un ítem siempre que no teng
 
 ### Requirement: Gestionar stock e inventario
 
-El sistema SHALL mantener el stock de cada ítem de equipamiento, derivar su disponibilidad del stock y permitir ocultarlo del catálogo público sin eliminarlo.
+El sistema SHALL mantener `stock_total` y `stock_disponible` de cada ítem (siempre `0 <= stock_disponible <= stock_total`), derivar su disponibilidad de `stock_disponible` y permitir ocultarlo del catálogo público sin eliminarlo.
 
 #### Scenario: Disponibilidad derivada del stock
 
-- **WHEN** un ítem tiene `stock` mayor que 0
-- **THEN** el sistema reporta `disponible = true` para ese ítem en toda consulta; si el `stock` es 0, reporta `disponible = false`
+- **WHEN** un ítem tiene `stock_disponible` mayor que 0
+- **THEN** el sistema reporta `disponible = true` para ese ítem en toda consulta; si el `stock_disponible` es 0, reporta `disponible = false`
 
 #### Scenario: Ítem inactivo oculto del listado público
 
@@ -131,8 +146,8 @@ El sistema SHALL mantener el stock de cada ítem de equipamiento, derivar su dis
 
 #### Scenario: El stock de un ítem nunca es negativo
 
-- **WHEN** se intenta crear o modificar un ítem con un `stock` menor que 0
-- **THEN** el sistema responde 400 y el ítem conserva su `stock` previo inválido
+- **WHEN** se intenta crear o modificar un ítem con un `stock_total` o `stock_disponible` menor que 0
+- **THEN** el sistema responde 400 y no crea ni modifica el ítem
 
 ### Requirement: Acceso administrativo a mutaciones
 

@@ -103,6 +103,48 @@ estructura visual de cada pantalla se describe en la sección "Estructura visual
 - Sección "Canchas disponibles ahora": tarjetas con nombre, disciplina, "Libre HH:MM" en
   verde y botón "Reservar" hacia la confirmación con ese turno.
 
+## Detalles visuales (fidelidad al wireframe)
+
+Aplican a Confirmar reserva y Home, además de lo descripto en "Estructura visual".
+
+**General**
+- Fondo de página gris claro; tarjetas blancas con borde fino y esquinas poco redondeadas.
+- Título de cada tarjeta ("TURNO SELECCIONADO", "EQUIPAMIENTO (OPCIONAL)", "RESUMEN",
+  "PRÓXIMA RESERVA", "ACCESOS RÁPIDOS", "CANCHAS DISPONIBLES AHORA"): mayúsculas, texto
+  chico y gris.
+- Botón primario oscuro (casi negro) con texto blanco; botón secundario blanco con borde.
+- Layout de dos columnas desiguales, la izquierda más ancha (Confirmar reserva ≈ 62/38,
+  Home ≈ 65/35), con separación entre tarjetas.
+- Link activo de la navbar subrayado y con texto más oscuro que los demás.
+
+**Confirmar reserva**
+- Turno: "Cancha 2 · Pádel" en negrita y debajo "Jueves 24/09 · 18:00 a 19:00 hs" (día de la
+  semana, fecha y rango de una hora). Cada turno dura una hora.
+- Equipamiento: filas separadas por una línea fina; cada ítem muestra el nombre y debajo
+  "N disponibles" en gris; el input de cantidad es chico y va a la derecha.
+- Solo se lista el equipamiento de la disciplina de la cancha elegida
+  (`obtenerEquipamiento(disciplina)`).
+- Resumen: etiqueta a la izquierda en gris y valor alineado a la derecha; línea divisoria
+  antes de "Monto total", que muestra el monto grande y en negrita; botón "Confirmar
+  reserva" a todo el ancho y la nota "Podés cancelar hasta 2 horas antes del turno" chica,
+  gris y centrada.
+- Valores del resumen: Fecha como "24/09, 18:00hs"; Equipamiento como cantidad y nombre
+  ("2 paletas"), o "Sin equipamiento" si no se eligió ninguno.
+- La tarjeta "Resumen" tiene el alto de su contenido (no se estira).
+
+**Home**
+- "Próxima reserva" y "Accesos rápidos" tienen el mismo alto; "Próxima reserva" puede
+  quedar con espacio libre abajo.
+- Próxima reserva: "Pádel · Cancha 3" en negrita, luego "Hoy, 18:00 a 19:00 hs" (con "Hoy" si
+  es el día actual, si no el día y la fecha) y "Equipamiento: 2 paletas". Los botones "Ver
+  detalle" y "Cancelar" van a la derecha; "Cancelar" es secundario con texto rojo.
+- Accesos rápidos: una fila por disciplina, con un cuadrado gris como ícono a la izquierda y
+  el nombre. Se usa el valor "Fútbol 5" (el wireframe dice "Fútbol") para coincidir con el
+  filtro de `/canchas`.
+- Canchas disponibles ahora: como máximo 3 tarjetas, en una fila de 3 columnas iguales; cada
+  una con nombre en negrita, disciplina en gris, "Libre HH:MM" en verde y negrita, y botón
+  "Reservar" a todo el ancho.
+
 ## Open Questions
 
 - Monto total: queda como placeholder hasta que se definan los precios de canchas y

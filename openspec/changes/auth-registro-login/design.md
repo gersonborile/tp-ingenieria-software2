@@ -27,7 +27,7 @@ contrato de comportamiento.
 
 **JWT (Bearer token stateless) en lugar de sesiones en servidor.**
 Se emite un JWT firmado con `JWT_SECRET` en el login; el cliente lo envía en el header
-`Authorization: Bearer <token>`. Es la opción más simple para una API consumida por un
+`Authorization: Bearer <token>`. Payload: `{ userId, email, rol }`. Es la opción más simple para una API consumida por un
 SPA/Next.js en un monorepo y evita estado de sesión en el backend.
 *Alternativa considerada:* cookies de sesión (express-session) — descartada por requerir
 estado en servidor y por ser menos natural para frontend/backend separados.
@@ -37,14 +37,10 @@ Se usa bcrypt con factor de costo configurable. *Alternativa:* argon2 — válid
 bcrypt es el estándar más difundido en el ecosistema Node/NestJS.
 
 **Guard global de autenticación + guard de roles.**
-Un `JwtAuthGuard` global valida el token en cada request; un `RolesGuard` aplica
-decoradores `@Roles('administrador')` donde corresponda. Esto permite proteger los
-futuros módulos con mínima configuración.
+Un `JwtAuthGuard` global valida el token en cada request (registrado como `APP_GUARD`); las rutas públicas se marcan con `@Public()`. Un `RolesGuard` aplica decoradores `@Roles('ADMINISTRADOR')`/roles por valor de enum donde corresponda. Esto permite proteger los futuros módulos con mínima configuración.
 
-**Modelo de datos: extensión de `User` en Prisma.**
-Se agregan a `User`: `email @unique`, `passwordHash`, `role` (enum `usuario |
-administrador`). La contraseña nunca se serializa en respuestas (se excluye con select o
-DTO de salida).
+**Modelo de datos: extensión de `Usuario` en Prisma.**
+Se agregan a `Usuario`: `email @unique`, `passwordHash` (mapeado a `password_hash`), `rol` (enum `USUARIO | ADMINISTRADOR`, default `USUARIO`). La contraseña nunca se serializa en respuestas (se excluye con select o DTO de salida).
 
 **Validación con class-validator + ValidationPipe global.**
 Los DTOs de registro y login validan formato de email y requisitos de contraseña.
@@ -71,7 +67,7 @@ sistema desde el inicio.
 Referencia de implementación en el monorepo vacío:
 1. Rama `feature/user-auth` sobre `main`.
 2. Scaffold del backend (NestJS + Prisma) y frontend (Next.js) si no existen.
-3. Migración de Prisma que agrega los campos de credenciales a `User`.
+3. Migración de Prisma que agrega los campos de credenciales a `Usuario`.
 4. Rollback: reversión del PR; la migración es aditiva (no elimina datos).
 
 ## Open Questions

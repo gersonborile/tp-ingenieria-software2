@@ -13,18 +13,18 @@
 
 ## 3. Pantalla 2 — Confirmar reserva (`/canchas/[id]/reservar`)
 
-- [ ] 3.1 Implementar la página con breadcrumb dinámico, título "Confirmar reserva" y la tarjeta "Turno seleccionado" con el botón "Cambiar turno", y verificar que muestra la cancha y el turno recibidos y que "Cambiar turno" navega a `/canchas`.
-- [ ] 3.2 Implementar la tarjeta "Equipamiento (opcional)" con checkbox, nombre, "N disponibles" e input de cantidad (mínimo 1, máximo el stock) y verificar que se aplican los límites.
-- [ ] 3.3 Implementar la tarjeta "Resumen" (cancha, fecha, equipamiento elegido, pago "Pendiente", monto placeholder) y verificar que se actualiza al cambiar el equipamiento.
-- [ ] 3.4 Implementar el botón "Confirmar reserva" y la nota "Podés cancelar hasta 2 horas antes del turno"; al confirmar guarda la reserva en el mock y redirige a `/`, y verificar que la reserva queda guardada.
+- [x] 3.1 Implementar la página con breadcrumb dinámico, título "Confirmar reserva" y la tarjeta "Turno seleccionado" con el botón "Cambiar turno", y verificar que muestra la cancha y el turno recibidos y que "Cambiar turno" navega a `/canchas`.
+- [x] 3.2 Implementar la tarjeta "Equipamiento (opcional)" con checkbox, nombre, "N disponibles" e input de cantidad (mínimo 1, máximo el stock) y mostrar solo el equipamiento de la disciplina de la cancha y verificar que se aplican los límites y el filtro.
+- [x] 3.3 Implementar la tarjeta "Resumen" (cancha, fecha, equipamiento elegido, pago "Pendiente", monto placeholder) y verificar que se actualiza al cambiar el equipamiento.
+- [x] 3.4 Implementar el botón "Confirmar reserva" y la nota "Podés cancelar hasta 2 horas antes del turno"; al confirmar guarda la reserva en el mock y redirige a `/`, y verificar que la reserva queda guardada.
 
 ## 4. Pantalla 3 — Home (`/`)
 
-- [ ] 4.1 Reemplazar la Home actual (quitar el panel de sesión) con el encabezado "Hola, {nombre}", "¿Qué querés hacer hoy?" y el botón "+ Reservar una cancha", y verificar que el botón navega a `/canchas`.
-- [ ] 4.2 Implementar la tarjeta "Próxima reserva" con "Ver detalle" y "Cancelar" como placeholder y un mensaje cuando no hay reservas, y verificar que una reserva recién confirmada aparece ahí.
-- [ ] 4.3 Implementar la tarjeta "Accesos rápidos" (Tenis, Fútbol 5, Pádel) y verificar que cada acceso navega a `/canchas?disciplina=...` con el filtro aplicado.
-- [ ] 4.4 Implementar la sección "Canchas disponibles ahora" con nombre, disciplina, "Libre HH:MM" en verde y botón "Reservar", y verificar que "Reservar" navega a la confirmación con ese turno.
+- [x] 4.1 Reemplazar la Home actual (quitar el panel de sesión) con el encabezado "Hola, {nombre}", "¿Qué querés hacer hoy?" y el botón "+ Reservar una cancha", y verificar que el botón navega a `/canchas`.
+- [x] 4.2 Implementar la tarjeta "Próxima reserva" con "Ver detalle" y "Cancelar" como placeholder y un mensaje cuando no hay reservas, y verificar que una reserva recién confirmada aparece ahí.
+- [x] 4.3 Implementar la tarjeta "Accesos rápidos" (Tenis, Fútbol 5, Pádel, con ícono cuadrado gris) y verificar que cada acceso navega a `/canchas?disciplina=...` con el filtro aplicado.
+- [x] 4.4 Implementar la sección "Canchas disponibles ahora" (máximo 3, en fila de 3 columnas) con nombre, disciplina, "Libre HH:MM" en verde y botón "Reservar", y verificar que "Reservar" navega a la confirmación con ese turno.
 
 ## 5. Verificación final
 
-- [ ] 5.1 Ejecutar typecheck, lint y build del frontend y verificar que terminan sin errores, y recorrer a mano el flujo login → Home → Canchas → Confirmar reserva → Home.
+- [x] 5.1 Ejecutar typecheck, lint y build del frontend y verificar que terminan sin errores, y recorrer a mano el flujo login → Home → Canchas → Confirmar reserva → Home.

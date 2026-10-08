@@ -1,5 +1,7 @@
 
 
+import { obtenerFechaLocalHoy } from "./fechas";
+
 export type Disciplina = "Tenis" | "Fútbol 5" | "Pádel";
 
 export type EstadoCancha = "disponible" | "ocupada" | "mantenimiento";
@@ -231,30 +233,49 @@ export function obtenerDisponiblesAhora(disciplina?: Disciplina | "Todas"): Arra
   hora: string;
 }> {
   const ahora = new Date();
-  const hoy = ahora.toISOString().split("T")[0];
-  const horas = ["16:00", "17:00", "18:00", "19:00", "20:00", "21:00"];
+  const hoy = obtenerFechaLocalHoy();
+  const horaActual = `${String(ahora.getHours()).padStart(2, "0")}:${String(
+    ahora.getMinutes()
+  ).padStart(2, "0")}`;
+  const horas = ["16:00", "17:00", "18:00", "19:00", "20:00", "21:00"].filter(
+    (hora) => hora >= horaActual
+  );
   const reservas = cargarReservas();
   const canchas = obtenerCanchas({ disciplina });
 
   const disponibles: Array<{ cancha: Cancha; hora: string }> = [];
 
   for (const cancha of canchas) {
-    for (const hora of horas) {
-      // Verificar si ya hay reserva confirmada para esta cancha, fecha, hora
-      const ocupada = reservas.some(
-        (r) =>
-          r.canchaId === cancha.id &&
-          r.fecha === hoy &&
-          r.hora === hora &&
-          r.estado === "confirmada"
-      );
-      if (!ocupada) {
-        disponibles.push({ cancha, hora });
-      }
+    const libre = horas.find(
+      (hora) =>
+        !reservas.some(
+          (r) =>
+            r.canchaId === cancha.id &&
+            r.fecha === hoy &&
+            r.hora === hora &&
+            r.estado === "confirmada"
+        )
+    );
+    if (libre) {
+      disponibles.push({ cancha, hora: libre });
     }
   }
 
-  return disponibles.slice(0, 6); // Mostrar hasta 6 opciones
+  const ordenadas: typeof disponibles = [];
+  const vistas = new Set<Disciplina>();
+  for (const entrada of disponibles) {
+    if (!vistas.has(entrada.cancha.disciplina)) {
+      vistas.add(entrada.cancha.disciplina);
+      ordenadas.push(entrada);
+    }
+  }
+  for (const entrada of disponibles) {
+    if (!ordenadas.includes(entrada)) {
+      ordenadas.push(entrada);
+    }
+  }
+
+  return ordenadas.slice(0, 3);
 }
 
 export function obtenerReservas(): Reserva[] {

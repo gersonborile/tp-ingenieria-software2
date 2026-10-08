@@ -1,6 +1,6 @@
 ## Context
 
-Módulo nuevo `rentals` (ver proposal.md - Why) que se apoya en `spec-equipamiento` (`EquipmentItem` + `pricePerUnit`) y `spec-reservas` (`Reservation` en estado `confirmed`). Se remueve el manejo de equipamiento de `POST /reservas`; el alquiler es la única vía. Montos informativos sin pagos (config del proyecto excluye facturación).
+Módulo nuevo `rentals` (ver proposal.md - Why) que se apoya en `equipamiento-catalogo` (`Equipamiento` con `precioUnitario`) y `spec-reservas` (`Reservation` en estado `confirmed`). Se remueve el manejo de equipamiento de `POST /reservas`; el alquiler es la única vía. Montos informativos sin pagos (config del proyecto excluye facturación).
 
 ## Goals / Non-Goals
 
@@ -18,36 +18,36 @@ Módulo nuevo `rentals` (ver proposal.md - Why) que se apoya en `spec-equipamien
 
 - **Modelo Prisma**:
   - `Rental` (tabla `rentals`): `id` UUID, `reservationId` FK unique → `Reservation`, `totalAmount` `Decimal(10,2)`, `createdAt`.
-  - `RentalItem` (tabla `rental_items`): `id` UUID, `rentalId` FK, `equipmentItemId` FK → `EquipmentItem`, `quantity` `Int > 0`, `pricePerUnit` `Decimal(10,2)` (snapshot del catálogo), `totalAmount` `Decimal(10,2)`.
-  - `EquipmentItem.pricePerUnit` (`Decimal(10,2)`, `>= 0`) en `equipment_items`. `@@unique([rentalId, equipmentItemId])` para no duplicar un equipamiento dentro del mismo alquiler.
+  - `RentalItem` (tabla `rental_items`): `id` UUID, `rentalId` FK, `equipamientoId` FK → `Equipamiento`, `quantity` `Int > 0`, `precioUnitario` `Decimal(10,2)` (snapshot del catálogo), `totalAmount` `Decimal(10,2)`.
+  - `Equipamiento.precioUnitario` (`Decimal(10,2)`, `>= 0`) en `equipamientos`. `@@unique([rentalId, equipamientoId])` para no duplicar un equipamiento dentro del mismo alquiler.
 
 - **Un alquiler por reserva**: unique en `Rental.reservationId` + catch `P2002` → `409`. Alternativa: check previo de existencia — descartada por race condition; el constraint lo garantiza en BD.
 
-- **Tomar el precio**: al crear el alquiler, el service lee `pricePerUnit` vigente de cada `EquipmentItem` y lo persiste en `RentalItem` (snapshot). Esto mantiene el monto inmutable aunque el catálogo cambie. Se calcula `totalAmount` de cada item (`quantity * pricePerUnit`) y el total del alquiler como suma. Se usa `Decimal` de Prisma para evitar errores de punto flotante.
+- **Tomar el precio**: al crear el alquiler, el service lee `precioUnitario` vigente de cada `Equipamiento` y lo persiste en `RentalItem` (snapshot). Esto mantiene el monto inmutable aunque el catálogo cambie. Se calcula `totalAmount` de cada item (`quantity * precioUnitario`) y el total del alquiler como suma. Se usa `Decimal` de Prisma para evitar errores de punto flotante.
 
-- **Flujo de creación transaccional (`$transaction`)**: valida reserva `confirmed` (404/409), chequea que no exista alquiler (unique index), y por cada item valida equipamiento existente (404) y descuenta con `updateMany({ where: { id, availableStock: { gte: quantity } }, data: { availableStock: { decrement: quantity } } })`; 0 filas → `409` y rollback. Inserta `Rental` + `RentalItem`s.
+- **Flujo de creación transaccional (`$transaction`)**: valida reserva `confirmed` (404/409), chequea que no exista alquiler (unique index), y por cada item valida equipamiento existente (404) y descuenta con `updateMany({ where: { id, stockDisponible: { gte: quantity } }, data: { stockDisponible: { decrement: quantity } } })`; 0 filas → `409` y rollback. Inserta `Rental` + `RentalItem`s.
 
-- **Liberación al cancelar la reserva**: el flujo de cancelación de `reservations` se extiende para incrementar `availableStock` de cada `RentalItem` del alquiler asociado (con cap en `totalStock`), dentro de la misma transacción que cambia el estado a `CANCELLED`.
+- **Liberación al cancelar la reserva**: el flujo de cancelación de `reservations` se extiende para incrementar `stockDisponible` de cada `RentalItem` del alquiler asociado (con cap en `stockTotal`), dentro de la misma transacción que cambia el estado a `CANCELLED`.
 
 - **Permisos** (mismo patrón que `reservations`): `@Roles(SOCIO, ADMIN, RECEPCIONISTA)` en el endpoint; el service valida que un `socio` solo alquile sobre reservas cuyo `memberId` coincida con su member (403), mientras `admin`/`recepcionista` pueden alquilar sobre cualquier reserva.
 
-- **DTO**: `CreateRentalDto` con `items: { equipmentId, quantity }[]` (array no vacío, items sin repetir, `quantity` min 1). Validación con class-validator; el service no valida manualmente.
+- **DTO**: `CreateRentalDto` con `items: { equipamientoId, quantity }[]` (array no vacío, items sin repetir, `quantity` min 1). Validación con class-validator; el service no valida manualmente.
 
 ## Risks / Trade-offs
 
 - [Carrera por el mismo stock entre alquileres] → `updateMany` condicional atómico + `$transaction`; 0 filas → `409`.
-- [Cambio de `pricePerUnit` en catálogo entre pedido y persistencia] → El precio se lee y persiste dentro de la misma transacción (snapshot).
-- [Liberar stock al cancelar puede superar `totalStock` si el admin lo redujo después] → El incremento se acota con cap en `totalStock`.
+- [Cambio de `precioUnitario` en catálogo entre pedido y persistencia] → El precio se lee y persiste dentro de la misma transacción (snapshot).
+- [Liberar stock al cancelar puede superar `stockTotal` si el admin lo redujo después] → El incremento se acota con cap en `stockTotal`.
 - [El REMOVED de `items` en `POST /reservas` es un cambio de contrato en curso] → Se coordina con `spec-reservas` (aún no archivado); se ajusta el DTO y la doc OpenAPI en el mismo release para no exponer el campo `items` nunca.
 - [Si no se libera el alquiler al cancelar reserva, quedan reservas fantasma de stock] → La liberación es parte de la misma transacción de cancelación; cubierto por test e2e.
 
 ## Migration Plan
 
-1. Aplicar antes: `spec-equipamiento` (con `pricePerUnit`) y `spec-reservas`.
-2. Migraciones aditivas: columna `price_per_unit` en `equipment_items`; tablas `rentals` y `rental_items` con FKs y unique en `rental.reservation_id` y `(rental_id, equipment_item_id)`.
+1. Aplicar antes: `equipamiento-catalogo` (que incluye `precioUnitario`) y `spec-reservas`.
+2. Migraciones aditivas: tablas `rentals` y `rental_items` con FKs y unique en `rental.reservation_id` y `(rental_id, equipamiento_id)`. `equipamientos.precio_unitario` ya existe en el schema.
 3. Implementar módulo `rentals`; ajustar `reservations` (quitar `items` del DTO de creación, liberar stock del alquiler en cancelación).
 4. Frontend: flujo de alquiler sobre reserva y quitar items del formulario de reserva.
-5. **Rollback**: revertir las migraciones (drop `rental_items`, `rentals`, columna de precio) y quitar el endpoint; el contrato de reservas queda como estaba en `spec-reservas` si el cambio se aborta antes de archivar.
+5. **Rollback**: revertir las migraciones (drop `rental_items`, `rentals`) y quitar el endpoint; el contrato de reservas queda como estaba en `spec-reservas` si el cambio se aborta antes de archivar.
 
 ## Open Questions
 

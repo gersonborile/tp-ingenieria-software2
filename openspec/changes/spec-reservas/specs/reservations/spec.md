@@ -5,7 +5,7 @@ Permite a socios y personal del club crear, consultar y cancelar reservas de can
 ## ADDED Requirements
 
 ### Requirement: Creación de reservas
-El sistema SHALL permitir crear una reserva mediante `POST /api/v1/reservas`. El cuerpo SHALL incluir `courtId`, `date`, `startTime` (inicio de una franja fija de 1 hora) y, opcionalmente, `memberId` solo para `admin`/`recepcionista`, y `items` (array de `{ equipmentId, quantity }`). Un usuario `socio` SHALL poder reservar solo para sí mismo. Al crearse, la reserva queda en estado `confirmed`.
+El sistema SHALL permitir crear una reserva mediante `POST /api/v1/reservas`. El cuerpo SHALL incluir `courtId`, `date`, `startTime` (inicio de una franja fija de 1 hora) y, opcionalmente, `memberId` solo para `admin`/`recepcionista`, y `items` (array de `{ equipamientoId, quantity }`). Un usuario `socio` SHALL poder reservar solo para sí mismo. Al crearse, la reserva queda en estado `confirmed`.
 
 #### Scenario: Crear reserva en slot libre
 - **WHEN** un usuario `socio` autenticado hace `POST /api/v1/reservas` con una cancha, una fecha futura y un `startTime` que corresponde a una franja de 1 hora libre
@@ -44,18 +44,18 @@ El sistema SHALL permitir crear una reserva mediante `POST /api/v1/reservas`. El
 - **THEN** el sistema responde `401 Unauthorized`
 
 ### Requirement: Equipamiento dentro de la reserva
-El sistema SHALL permitir incluir equipamiento en la reserva mediante el campo `items` de `POST /api/v1/reservas`. Para cada item, el sistema SHALL verificar que el equipamiento exista y que `availableStock >= quantity`; si se cumple, descuenta `quantity` del `availableStock` en la misma operación. Si algún item no tiene stock suficiente, la reserva NO se crea.
+El sistema SHALL permitir incluir equipamiento en la reserva mediante el campo `items` de `POST /api/v1/reservas`. Para cada item, el sistema SHALL verificar que el equipamiento exista y que `stock_disponible >= quantity`; si se cumple, descuenta `quantity` del `stock_disponible` en la misma operación. Si algún item no tiene stock suficiente, la reserva NO se crea.
 
 #### Scenario: Reservar con equipamiento con stock suficiente
-- **WHEN** un usuario autenticado hace `POST /api/v1/reservas` con `items` donde cada `quantity` es menor o igual al `availableStock` del equipamiento
-- **THEN** el sistema responde `201 Created`, la reserva incluye los items y el `availableStock` de cada equipamiento queda descontado en `quantity`
+- **WHEN** un usuario autenticado hace `POST /api/v1/reservas` con `items` donde cada `quantity` es menor o igual al `stock_disponible` del equipamiento
+- **THEN** el sistema responde `201 Created`, la reserva incluye los items y el `stock_disponible` de cada equipamiento queda descontado en `quantity`
 
 #### Scenario: Stock insuficiente de equipamiento
-- **WHEN** un usuario autenticado hace `POST /api/v1/reservas` con un item cuya `quantity` supera el `availableStock`
+- **WHEN** un usuario autenticado hace `POST /api/v1/reservas` con un item cuya `quantity` supera el `stock_disponible`
 - **THEN** el sistema responde `409 Conflict`, no crea la reserva y no descuenta stock
 
 #### Scenario: Equipamiento inexistente
-- **WHEN** un usuario autenticado hace `POST /api/v1/reservas` con un `equipmentId` que no existe
+- **WHEN** un usuario autenticado hace `POST /api/v1/reservas` con un `equipamientoId` que no existe
 - **THEN** el sistema responde `404 Not Found` y no crea la reserva
 
 #### Scenario: Reserva sin equipamiento
@@ -90,7 +90,7 @@ El sistema SHALL permitir cancelar una reserva mediante `PATCH /api/v1/reservas/
 
 #### Scenario: Cancelar reserva propia dentro de la ventana
 - **WHEN** un usuario `socio` hace `PATCH /api/v1/reservas/:id/cancelar` sobre una de sus reservas que comienza en más de 2 horas
-- **THEN** el sistema responde `200 OK`, la reserva queda en estado `cancelled` y se restituye el `availableStock` de los items reservados
+- **THEN** el sistema responde `200 OK`, la reserva queda en estado `cancelled` y se restituye el `stock_disponible` de los items reservados
 
 #### Scenario: Cancelar por recepcionista en nombre de un socio
 - **WHEN** un usuario `recepcionista` hace `PATCH /api/v1/reservas/:id/cancelar` sobre una reserva de otro socio dentro de la ventana

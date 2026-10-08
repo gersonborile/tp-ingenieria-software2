@@ -49,6 +49,8 @@ jobs:
     env:
       DATABASE_URL: postgresql://club_test:club_test@localhost:5432/club_test
       NODE_ENV: test
+      # Valor de prueba: la app falla al arrancar si JWT_SECRET no está definido.
+      JWT_SECRET: valor-de-prueba-backend-tests-no-usar-en-produccion
     steps:
       - name: Checkout
         uses: actions/checkout@v4

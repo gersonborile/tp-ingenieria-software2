@@ -10,11 +10,11 @@ del sistema.
 El sistema SHALL permitir que una persona se registre como socio proporcionando nombre,
 contacto, email y contraseña. El email SHALL ser único en el sistema y
 la contraseña SHALL almacenarse únicamente de forma hasheada. El usuario registrado
-SHALL obtener el rol `usuario`.
+SHALL obtener el rol `USUARIO`.
 
 #### Scenario: Registro exitoso
 - **WHEN** una persona envía datos de registro válidos con un email no utilizado
-- **THEN** el sistema crea el usuario con rol `usuario`, guarda la contraseña hasheada y
+- **THEN** el sistema crea el usuario con rol `USUARIO`, guarda la contraseña hasheada y
   devuelve el usuario creado sin datos de credenciales
 
 #### Scenario: Email duplicado
@@ -29,20 +29,18 @@ SHALL obtener el rol `usuario`.
 ### Requirement: Inicio de sesión
 El sistema SHALL autenticar a un usuario registrado mediante email y contraseña. Ante
 credenciales válidas, SHALL devolver un token de sesión que identifica al usuario y su
-rol. Ante credenciales inválidas, SHALL rechazar el acceso sin revelar qué dato fue
-incorrecto.
+rol. El payload del token SHALL incluir `userId`, `email` y `rol`. Ante credenciales inválidas, SHALL rechazar el acceso sin revelar qué dato fue incorrecto.
 
 #### Scenario: Login exitoso
 - **WHEN** un usuario registrado envía email y contraseña correctos
-- **THEN** el sistema devuelve un token de sesión que identifica su usuario y rol
+- **THEN** el sistema devuelve un token de sesión que identifica su usuario y rol, cuyo payload incluye `userId`, `email` y `rol`
 
 #### Scenario: Credenciales inválidas
 - **WHEN** un usuario envía un email inexistente o una contraseña incorrecta
 - **THEN** el sistema rechaza el acceso con un error genérico de credenciales inválidas
 
 ### Requirement: Sesión autenticada
-El sistema SHALL exigir un token de sesión válido para acceder a los recursos protegidos.
-SHALL rechazar las peticiones sin token, con token inválido o con token vencido.
+El sistema SHALL exigir un token de sesión válido para acceder a los recursos protegidos. Las rutas públicas SHALL estar marcadas con `@Public()`. SHALL rechazar las peticiones sin token, con token inválido o con token vencido.
 
 #### Scenario: Acceso a recurso protegido con sesión válida
 - **WHEN** un usuario con token de sesión válido solicita un recurso protegido
@@ -50,28 +48,28 @@ SHALL rechazar las peticiones sin token, con token inválido o con token vencido
 
 #### Scenario: Acceso a recurso protegido sin sesión
 - **WHEN** una petición a un recurso protegido no incluye token de sesión
-- **THEN** el sistema la rechaza exigiendo autenticación
+- **THEN** el sistema la rechaza exigiendo autenticación (401)
 
 #### Scenario: Token inválido o vencido
 - **WHEN** una petición a un recurso protegido incluye un token inválido o vencido
-- **THEN** el sistema la rechaza e indica que la sesión no es válida
+- **THEN** el sistema la rechaza e indica que la sesión no es válida (401)
 
 ### Requirement: Autorización por rol
-El sistema SHALL asociar a cada usuario un rol (`usuario` o `administrador`) y SHALL
-restringir los recursos de administración a usuarios con rol `administrador`. Un usuario
-con rol `usuario` SHALL poder acceder únicamente a recursos que le pertenecen.
+El sistema SHALL asociar a cada usuario un rol (`USUARIO` o `ADMINISTRADOR`) y SHALL
+restringir los recursos de administración a usuarios con rol `ADMINISTRADOR`. Un usuario
+con rol `USUARIO` SHALL poder acceder únicamente a recursos que le pertenecen.
 
 #### Scenario: Recurso de administración con rol administrador
-- **WHEN** un usuario con rol `administrador` y sesión válida solicita un recurso de administración
+- **WHEN** un usuario con rol `ADMINISTRADOR` y sesión válida solicita un recurso de administración
 - **THEN** el sistema atiende la petición
 
 #### Scenario: Recurso de administración sin rol administrador
-- **WHEN** un usuario con rol `usuario` y sesión válida solicita un recurso de administración
-- **THEN** el sistema rechaza la petición por falta de permisos
+- **WHEN** un usuario con rol `USUARIO` y sesión válida solicita un recurso de administración
+- **THEN** el sistema rechaza la petición por falta de permisos (403)
 
 #### Scenario: Acceso a recursos ajenos
-- **WHEN** un usuario con rol `usuario` solicita recursos que pertenecen a otro usuario
-- **THEN** el sistema rechaza la petición
+- **WHEN** un usuario con rol `USUARIO` solicita recursos que pertenecen a otro usuario
+- **THEN** el sistema rechaza la petición (403 o 404 según política de privacidad)
 
 ### Requirement: Cierre de sesión
 El sistema SHALL permitir que un usuario finalice su sesión dejando de usar el token de

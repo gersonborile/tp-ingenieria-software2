@@ -149,8 +149,8 @@ export default function Landing() {
             <h2 className="text-center text-2xl font-bold text-neutral-900">Cómo funciona</h2>
             <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-8">
               {PASOS.map((paso, indice) => (
-                <div key={paso.titulo}>
-                  <div className="w-8 h-8 rounded-full bg-neutral-900 text-white flex items-center justify-center font-semibold">
+                <div key={paso.titulo} className="flex flex-col items-center text-center">
+                  <div className="w-8 h-8 rounded-full bg-white border border-neutral-900 text-neutral-900 flex items-center justify-center font-semibold">
                     {indice + 1}
                   </div>
                   <h3 className="mt-3 font-bold text-neutral-900">{paso.titulo}</h3>
@@ -161,7 +161,7 @@ export default function Landing() {
           </div>
         </section>
 
-        <section className="border-b border-neutral-200">
+        <section>
           <div className="max-w-6xl mx-auto px-4 py-12 md:py-16 flex flex-col items-center gap-6">
             <h2 className="text-center text-2xl font-bold text-neutral-900">
               Creá tu cuenta y reservá tu primer turno
@@ -178,7 +178,7 @@ export default function Landing() {
 
       <footer id="horarios" className="border-t border-neutral-200 bg-white scroll-mt-16">
         <div className="max-w-6xl mx-auto px-4 py-12 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8">
-          <div id="contacto" className="scroll-mt-16">
+          <div>
             <div className="flex items-center gap-2">
               <div className="w-8 h-8 bg-neutral-900 rounded flex items-center justify-center text-white font-bold">
                 CD
@@ -197,7 +197,7 @@ export default function Landing() {
             <p className="mt-3 text-sm text-neutral-600">Todos los días, de 16:00 a 22:00</p>
           </div>
 
-          <div>
+          <div id="contacto" className="scroll-mt-16">
             <h3 className="text-xs font-medium uppercase tracking-wide text-neutral-500">
               Contacto
             </h3>
